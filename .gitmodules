@@ -1,0 +1,3 @@
+[submodule "deps/jsone"]
+	path = deps/jsone
+	url = https://github.com/sile/jsone.git

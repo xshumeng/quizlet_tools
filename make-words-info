@@ -1,0 +1,49 @@
+#!/usr/bin/env perl
+
+###-------------------------------------------------------------------------------
+### Auth: xueshumeng
+### Date: Fri Jan 25 16:17:50 CST 2019
+### Page: www.acoding.top
+###
+### @doc
+### Youdao keys pairs:
+### keyfrom:pdblog,   key:993123434
+### keyfrom:YouDaoCV, key:659600698
+### @end
+###-------------------------------------------------------------------------------
+use strict;
+use HTTP::Client;
+
+my $http_client = HTTP::Client->new();
+my $key_from = "pdblog";
+my $key = "993123434";
+
+foreach (@ARGV) {
+    my $words_file_src = "$_";
+    my $words_file_dst = "$_.info";
+    open(WORDS_FILE_SRC, "<", $words_file_src) or die "Can not open $words_file_src, $!";
+    open(WORDS_FILE_DST, ">", $words_file_dst) or die "Can not open $words_file_dst, $!";
+    while (defined(my $line = <WORDS_FILE_SRC>)) {
+	if ($line =~ m/^((?: *\w+ *)+)$/) {
+	    my $api_url = get_api_url($key_from, $key, "$1");
+	    my $res_body = $http_client->get($api_url);
+	    if ($http_client->status_message =~ /^200/) {
+		printf("%s\n", $res_body);
+		printf(WORDS_FILE_DST "%s\n", $res_body);
+	    } else {
+		# Todo: dump the failed
+		print "Status:  ", $http_client->status_message, "\n";
+	    }
+	}else {
+	    printf("%s", $line);
+	    printf(WORDS_FILE_DST "%s", $line);
+	}
+    }
+    close(WORDS_FILE_SRC);
+    close(WORDS_FILE_DST);
+}
+
+sub get_api_url {
+    my ($key_from, $key, $query) = @_;
+    "http://fanyi.youdao.com/openapi.do?keyfrom=". "$key_from" . "&key=" . "$key" . "&type=data&doctype=json&version=1.1&q=" . "$query";
+}

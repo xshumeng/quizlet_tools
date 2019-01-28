@@ -1,0 +1,45 @@
+#!/usr/bin/env perl
+
+###-------------------------------------------------------------------------------
+### Auth: xueshumeng
+### Date: Mon Jan 28 14:24:59 CST 2019
+### Page: www.acoding.top
+###
+### @doc
+###
+### @end
+###-------------------------------------------------------------------------------
+use strict;
+use JSON;
+
+foreach (@ARGV) {
+    my $json = new JSON;
+    my $words_file_src = "$_";
+    my $words_file_dst = $words_file_src =~ s/\.info/\.quiz/r;
+    open(WORDS_FILE_SRC, "<:utf8", $words_file_src) or die "Can not open $words_file_src, $!";
+    open(WORDS_FILE_DST, ">:utf8", $words_file_dst) or die "Can not open $words_file_dst, $!";
+    while(defined(my $line = <WORDS_FILE_SRC>)) {
+    	if($line =~ m/^\{.*\}$/) {
+    	    my $json_parser = $json->decode($line);
+    	    my $translation = $json_parser->{'translation'};
+    	    my $basic       = $json_parser->{'basic'};
+    	    my $us_phonetic = $basic->{'us-phonetic'};
+    	    my $st_phonetic = $basic->{'phonetic'};
+    	    my $uk_phonetic = $basic->{'uk-phonetic'};
+    	    my @explains    = @{$basic->{'explains'}} if $basic->{'explains'};
+    	    my $query       = $json_parser->{'query'} if $basic->{'explains'};
+    	    printf(WORDS_FILE_DST "%s\n", $query) if $basic->{'explains'};
+    	    foreach (@explains) {
+    		if(/\($query\)/i) {
+    		    printf(WORDS_FILE_DST "%s\n", "$`$'");
+    		}else{
+    		    printf(WORDS_FILE_DST "%s\n", $_);
+    		}
+    	    }
+    	    print(WORDS_FILE_DST "\n") if $basic->{'explains'};
+    	}else{
+    	    printf(WORDS_FILE_DST "%s\n", $line);
+    	}
+    }
+    close(WORDS_FILE_SRC); close(WORDS_FILE_DST);
+}
